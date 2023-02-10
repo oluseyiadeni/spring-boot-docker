@@ -1,17 +1,19 @@
 node{
-     
-    stage('SCM Checkout'){
+     def mavenHome = tool name:'maven3.8.7'
+    stage('SCM Clone'){
         git credentialsId: 'GIT_CREDENTIALS', url:  'https://github.com/simonLegah/UnityProject.git',branch: 'master'
-    }
-    
-    stage(" Maven Clean Package"){
-      def mavenHome =  tool name: "Maven-3.6.1", type: "maven"
-      def mavenCMD = "${mavenHome}/bin/mvn"
-      sh "${mavenCMD} clean package"
-      
+    }  
+    stage("Maven Build"){
+      sh "${mavenHome}/bin/mvn clean package"  
+    } 
+     stage("SonarQubeReport"){ 
+      sh "${mavenHome}/bin/mvn sonar:sonar"  
     } 
     
-    
+     stage("UploadToNexus"){
+      sh "${mavenHome}/bin/mvn deploy"  
+    }
+   
     stage('Build Docker Image'){
         sh 'docker build -t mylandmarktech/spring-boot-mongo .'
     }
@@ -22,19 +24,14 @@ node{
         }
         sh 'docker push mylandmarktech/spring-boot-mongo'
      }
-     
-     stage("Deploy To Kuberates Cluster"){
-       kubernetesDeploy(
-         configs: 'springBootMongo.yml', 
-         kubeconfigId: 'KUBERNATES_CONFIG',
-         enableConfigSubstitution: true
-        )
+     stage('RemoveDockerImages'){ 
+     sh'docker rmi $(docker images -q)'
      }
-	 
-	  /**
-      stage("Deploy To Kuberates Cluster"){
-        sh 'kubectl apply -f springBootMongo.yml'
-      } **/
+     stage("Deploy To Kuberates Cluster"){
+       sh'kubectl apply -f springapp.yml'
+     }
+	
+      } 
      
 }
 
