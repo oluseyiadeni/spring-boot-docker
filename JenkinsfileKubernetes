@@ -35,4 +35,12 @@ node{
      
 }
 
+//Also check suggestion omn kubectl
+
+
+--------------------------
+//docker run --name spring-boot-app -d -p 8000:8080 mylandmarktechimage:29
+//kubectl appy -f manifest.yml --------  Deploy application into kubernetes cluster
+
+
 
